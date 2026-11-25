@@ -36,7 +36,9 @@ def startup_event():
 
 @app.get("/")
 def serve_frontend():
-    return FileResponse(FRONTEND_FILE)
+    if FRONTEND_FILE.exists():
+        return FileResponse(FRONTEND_FILE)
+    return {"status": "ok", "message": "BISINDO Sign Detection API"}
 
 
 @app.get("/api/health")
