@@ -1,0 +1,36 @@
+name: Build and Push to Azure Container Registry
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  ACR_LOGIN_SERVER: acrbisindo12345.azurecr.io
+  IMAGE_NAME: bisindo-web-app
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
