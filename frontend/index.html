@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BISINDO Sign Detection</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-inner: #273549;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px 28px;
+    }
+
+    .app {
+      max-width: 1220px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .badge {
+      background: var(--success);
+      color: #06281e;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    /* Main Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: 1.65fr 1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    /* Camera Card */
+    .camera-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #090d16;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* pratinjau cermin */
+      display: block;
+    }
+
+    .countdown-circle {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.78);
+      color: var(--primary);
+      font-size: 42px;
+      font-weight: 800;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rec-pill {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.82);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: 10px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rec-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    /* Right Panel */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .btn-record {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--primary);
+      cursor: pointer;
+      transition: background 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn-record:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-record:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    /* Switch */
+    .switch-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch-row input {
+      display: none;
+    }
+
+    .switch-track {
+      width: 42px;
+      height: 22px;
+      background: #475569;
+      border-radius: 999px;
+      position: relative;
+      transition: background 0.2s ease;
+    }
+
+    .switch-track::after {
+      content: "";
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s ease;
+    }
+
+    .switch-row input:checked + .switch-track {
+      background: var(--primary);
+    }
+
+    .switch-row input:checked + .switch-track::after {
+      transform: translateX(20px);
+    }
+
+    /* Result Card */
+    .result-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .hero-word {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--success);
+      line-height: 1.15;
+      min-height: 32px;
+    }
+
+    .hero-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+      margin-bottom: 14px;
+    }
+
+    .top3-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .top3-item {
+      background: var(--card-inner);
+      border-radius: 12px;
+      padding: 10px 14px;
+    }
+
+    .top3-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 7px;
+    }
+
+    .top3-word {
+      font-weight: 600;
+    }
+
+    .top3-item.rank-0 .top3-word {
+      font-weight: 700;
+    }
+
+    .top3-pct {
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .top3-item.rank-0 .top3-pct {
+      color: var(--success);
+    }
+
+    .bar-bg {
+      height: 7px;
+      background: #0f172a;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .top3-item.rank-0 .bar-fill {
+      background: var(--success);
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div>
+        <h1>BISINDO Sign Detection</h1>
+        <p>Deteksi kata Bahasa Isyarat Indonesia secara real-time</p>
+      </div>
+      <div id="statusBadge" class="badge">Memuat model...</div>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <div class="camera-wrap">
+          <video id="video" autoplay playsinline muted></video>
+          <div id="countdownEl" class="countdown-circle">3</div>
+          <div id="recEl" class="rec-pill">
+            <span class="rec-dot"></span>
+            <span>REC</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="right-col">
+        <section class="card">
+          <div class="section-title">Kontrol Perekaman</div>
+          <button id="recordBtn" class="btn-record" disabled>Mulai Rekam (Spasi)</button>
+          <label class="switch-row">
+            <input id="mirrorToggle" type="checkbox" checked />
+            <span class="switch-track"></span>
+            <span>Mirror input ke model</span>
+          </label>
+        </section>
+
+        <section class="card result-card">
+          <div>
+            <div class="section-title">Hasil Prediksi (Top 3)</div>
+            <div id="heroWord" class="hero-word">—</div>
+            <div id="heroSub" class="hero-sub">Belum ada gerakan direkam</div>
+          </div>
+
+          <div class="top3-list">
+            <div class="top3-item rank-0">
+              <div class="top3-meta">
+                <span id="word0" class="top3-word">-</span>
+                <span id="pct0" class="top3-pct">0.0%</span>
+              </div>
+              <div class="bar-bg"><div id="bar0" class="bar-fill"></div></div>
+            </div>
+
+            <div class="top3-item">
+              <div class="top3-meta">
+                <span id="word1" class="top3-word">-</span>
+                <span id="pct1" class="top3-pct">0.0%</span>
+              </div>
+              <div class="bar-bg"><div id="bar1" class="bar-fill"></div></div>
+            </div>
+
+            <div class="top3-item">
+              <div class="top3-meta">
+                <span id="word2" class="top3-word">-</span>
+                <span id="pct2" class="top3-pct">0.0%</span>
+              </div>
+              <div class="bar-bg"><div id="bar2" class="bar-fill"></div></div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const COUNTDOWN_MS = 3000;
+    const RECORD_MS = 2000;
+
+    const videoEl = document.getElementById("video");
+    const badgeEl = document.getElementById("statusBadge");
+    const recordBtn = document.getElementById("recordBtn");
+    const mirrorToggle = document.getElementById("mirrorToggle");
+    const countdownEl = document.getElementById("countdownEl");
+    const recEl = document.getElementById("recEl");
+
+    const heroWordEl = document.getElementById("heroWord");
+    const heroSubEl = document.getElementById("heroSub");
+
+    let stream = null;
+    let modelReady = false;
+    let busy = false;
+
+    function setBadge(text, bg, color = "#06281e") {
+      badgeEl.textContent = text;
+      badgeEl.style.background = bg;
+      badgeEl.style.color = color;
+    }
+
+    async function initApp() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480, facingMode: "user" },
+          audio: false,
+        });
+        videoEl.srcObject = stream;
+      } catch (err) {
+        setBadge("Kamera gagal diakses", "#ef4444", "#ffffff");
+        alert("Gagal membuka kamera: " + err.message);
+        return;
+      }
+
+      // Poll status backend sampai model selesai dimuat
+      const timer = setInterval(async () => {
+        try {
+          const res = await fetch("/api/health");
+          const data = await res.json();
+          if (data.ready) {
+            clearInterval(timer);
+            modelReady = true;
+            recordBtn.disabled = false;
+            setBadge("Siap • Tekan SPASI", "#10b981", "#06281e");
+          }
+        } catch (_) {}
+      }, 500);
+    }
+
+    function pickMimeType() {
+      const candidates = [
+        "video/webm;codecs=vp9",
+        "video/webm;codecs=vp8",
+        "video/webm",
+        "video/mp4",
+      ];
+      return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+    }
+
+    function recordClip(durationMs) {
+      return new Promise((resolve, reject) => {
+        const mimeType = pickMimeType();
+        const recorder = mimeType
+          ? new MediaRecorder(stream, { mimeType })
+          : new MediaRecorder(stream);
+
+        const chunks = [];
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) chunks.push(e.data);
+        };
+        recorder.onerror = (e) => reject(e.error || new Error("Gagal merekam"));
+        recorder.onstop = () => {
+          const ext = (recorder.mimeType || "").includes("mp4") ? "mp4" : "webm";
+          const blob = new Blob(chunks, { type: recorder.mimeType || "video/webm" });
+          resolve({ blob, ext });
+        };
+
+        recorder.start();
+        setTimeout(() => {
+          if (recorder.state !== "inactive") recorder.stop();
+        }, durationMs);
+      });
+    }
+
+    function renderResult(data) {
+      for (let i = 0; i < 3; i++) {
+        const item = data.top3[i];
+        const wordNode = document.getElementById(`word${i}`);
+        const pctNode = document.getElementById(`pct${i}`);
+        const barNode = document.getElementById(`bar${i}`);
+
+        if (item) {
+          wordNode.textContent = item.word;
+          pctNode.textContent = `${item.percent.toFixed(1)}%`;
+          barNode.style.width = `${Math.min(100, Math.max(0, item.percent))}%`;
+        } else {
+          wordNode.textContent = "-";
+          pctNode.textContent = "0.0%";
+          barNode.style.width = "0%";
+        }
+      }
+
+      heroWordEl.textContent = data.best_word.toUpperCase();
+      if (data.low_confidence) {
+        heroWordEl.style.color = "#f59e0b";
+        heroSubEl.textContent = `Confidence rendah (${data.best_percent.toFixed(1)}%) — coba ulangi`;
+        setBadge("Confidence rendah, coba lagi", "#f59e0b", "#291900");
+      } else {
+        heroWordEl.style.color = "#10b981";
+        heroSubEl.textContent = `Akurasi keyakinan: ${data.best_percent.toFixed(1)}%`;
+        setBadge(`Terdeteksi: ${data.best_word}`, "#10b981", "#06281e");
+      }
+    }
+
+    async function startFlow() {
+      if (!modelReady || busy) return;
+      busy = true;
+      recordBtn.disabled = true;
+
+      // 1. Countdown 3 detik
+      const cdStart = Date.now();
+      countdownEl.style.display = "flex";
+      while (true) {
+        const rem = COUNTDOWN_MS - (Date.now() - cdStart);
+        if (rem <= 0) break;
+        countdownEl.textContent = String(Math.max(1, Math.ceil(rem / 1000)));
+        setBadge(`Bersiap... ${(rem / 1000).toFixed(1)} dtk`, "#f59e0b", "#291900");
+        await new Promise((r) => setTimeout(r, 80));
+      }
+      countdownEl.style.display = "none";
+
+      // 2. Rekam 2 detik
+      recEl.style.display = "flex";
+      recordBtn.textContent = "Merekam (2 dtk)...";
+      recordBtn.style.background = "#ef4444";
+      setBadge("Merekam gerakan...", "#ef4444", "#ffffff");
+
+      let clip;
+      try {
+        clip = await recordClip(RECORD_MS);
+      } catch (err) {
+        recEl.style.display = "none";
+        setBadge("Gagal merekam", "#ef4444", "#ffffff");
+        alert(err.message);
+        busy = false;
+        recordBtn.disabled = false;
+        recordBtn.textContent = "Mulai Rekam (Spasi)";
+        recordBtn.style.background = "#3b82f6";
+        return;
+      }
+      recEl.style.display = "none";
+
+      // 3. Kirim klip video ke backend API
+      recordBtn.textContent = "Memproses...";
+      recordBtn.style.background = "#334155";
+      setBadge("Memproses gerakan...", "#3b82f6", "#ffffff");
+
+      const formData = new FormData();
+      formData.append("video", clip.blob, `peraga_2s.${clip.ext}`);
+      formData.append("mirror", String(mirrorToggle.checked));
+
+      try {
+        const res = await fetch("/api/predict", {
+          method: "POST",
+          body: formData,
+        });
+        const payload = await res.json();
+
+        if (!res.ok) {
+          throw new Error(payload.detail || "Gagal memproses prediksi.");
+        }
+
+        renderResult(payload);
+      } catch (err) {
+        setBadge(err.message, "#ef4444", "#ffffff");
+        heroSubEl.textContent = err.message;
+      } finally {
+        busy = false;
+        recordBtn.disabled = false;
+        recordBtn.textContent = "Mulai Rekam (Spasi)";
+        recordBtn.style.background = "#3b82f6";
+      }
+    }
+
+    recordBtn.addEventListener("click", startFlow);
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" && document.activeElement.tagName !== "BUTTON") {
+        e.preventDefault();
+        startFlow();
+      }
+    });
+
+    initApp();
+  </script>
+</body>
+</html>
